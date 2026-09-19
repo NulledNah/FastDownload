@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>
+(function(){
+  var th=null, lg=null;
+  try { th=localStorage.getItem('fd-theme'); lg=localStorage.getItem('fd-lang'); }catch(e){}
+  if(!th) th='dark';
+  if(!lg) lg='en';
+  document.documentElement.setAttribute('data-theme', th);
+  document.documentElement.setAttribute('lang', lg);
+  window.__lang = lg;
+})();
+</script>
+<style>/*__STYLES__*/</style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <h1 class="wordmark"><span class="fast">Fast</span><span class="dl">Download</span></h1>
+      <div class="controls">
+        <button class="ghost" id="theme"></button>
+        <button class="ghost" id="lang">EN</button>
+      </div>
+    </div>
+    <p class="sub" data-i18n="sub">Everything in one place, but FAST</p>
+    <div class="searchbar">
+      <div class="srcpick" id="srcpick">
+        <button type="button" class="srcbtn" id="srcbtn" aria-haspopup="listbox" aria-expanded="false">
+          <span id="srclabel">All sources</span>
+          <svg class="caret" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="srcmenu" id="srcmenu" role="listbox"></div>
+      </div>
+      <select id="sort" aria-label="Sort results">
+        <option value="relevance" data-i18n="sort_rel">Search relevance</option>
+        <option value="quality_desc" data-i18n="sort_q_desc">Audio quality (high &#8594; low)</option>
+        <option value="quality_asc" data-i18n="sort_q_asc">Audio quality (low &#8594; high)</option>
+        <option value="duration_desc" data-i18n="sort_d_desc">Duration (long &#8594; short)</option>
+        <option value="duration_asc" data-i18n="sort_d_asc">Duration (short &#8594; long)</option>
+      </select>
+      <input id="q" data-i18n-ph="search_ph" placeholder="Search for a song or video..." autofocus>
+      <button id="searchBtn" data-i18n="search">Search</button>
+    </div>
+  </header>
+  <main>
+    <section class="results" id="results">
+      <div id="list" class="list"><div class="empty">No results.</div></div>
+      <div class="list-loading"><div class="spinner"></div></div>
+    </section>
+    <aside class="player">
+      <div class="frame">
+        <video id="yt" controls playsinline></video>
+        <div id="ph" class="placeholder">Select a result to watch it here.</div>
+        <div id="load" class="loading">
+          <div class="lbar"><i id="lfill"></i></div>
+          <span id="lmsg"></span>
+        </div>
+      </div>
+      <div style="border:1px solid var(--line); border-radius:10px;
+           background:var(--field); padding:11px 14px">
+        <div id="nowTitle" style="font-weight:600">No video selected</div>
+        <div id="nowChan" style="color:var(--muted); font-size:11.5px; margin-top:2px"></div>
+        <div id="meta" style="color:var(--accent); font-size:11.5px; margin-top:4px; font-weight:600"></div>
+        <div id="qbadge" style="color:var(--muted); font-size:11px; margin-top:2px"></div>
+      </div>
+      <div style="display:flex; gap:8px">
+        <button class="ghost" id="ext" data-i18n="open_yt" style="flex:1">Open on YouTube</button>
+        <select id="fmt" style="flex:0 0 auto">
+          <option value="wav">WAV</option>
+          <option value="flac">FLAC</option>
+          <option value="mp3">MP3</option>
+        </select>
+        <button id="dl" style="flex:2" disabled>Download WAV</button>
+      </div>
+    </aside>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <footer>
+    <div class="destrow">
+      <span class="path" id="folder"></span>
+      <button class="ghost" id="pick" data-i18n="folder">Folder...</button>
+      <button class="ghost" id="open" data-i18n="open_folder">Open folder</button>
+    </div>
+    <div class="projwarn" id="projwarn" data-i18n="save_hint"></div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="status" id="status">Ready.</div>
+  </footer>
+<script>/*__SCRIPT__*/</script>
+</body>
+</html>

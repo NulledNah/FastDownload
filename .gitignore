@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Build output
+plugin/build/
+plugin/external/
+plugin/dist/
+
+# Installer output
+installer/output/
+
+# Local FL Studio test projects
+projects/
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Brand source assets (not used at runtime; the generated icon is in engine/assets/)
+engine/ui/assets/
