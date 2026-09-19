@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.0.1
+
+Maintenance and safety release.
+
+- **yt-dlp auto-update**: the app refreshes `yt-dlp` (via pip) when it hasn't been
+  checked recently, and shows an **Update yt-dlp** button only when needed.
+  The staleness check now uses the *last successful update* instead of the version
+  date, which previously kept nagging when the installed version was already the latest.
+- **CSRF guard**: the local API now requires a per-run token, so a web page can no
+  longer POST to `127.0.0.1:8731` (e.g. trigger a download or open a folder).
+  The UI sends the token automatically.
+- Removed a dead single-user migration branch in the browser-tab record.
+- Added `TODO.md`.
+
+Asset: `FastDownload-Setup.exe` (v1.0.1) — SHA-256
+`98795D05057F17345C0F41DB806C6590F7E01903B67022FED244C3658A20ACB6`
+
+Requirements and installation: see v1.0.0 below.
+
 ## v1.0.0 — first release
 
 **FastDownload** searches multiple sources, previews tracks and downloads them as

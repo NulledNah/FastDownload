@@ -3,7 +3,7 @@
 ; (o dal menu di FastDownload.bat)
 
 #define AppName "FastDownload"
-#define AppVersion "1.0.0"
+#define AppVersion "1.0.1"
 #define AppPublisher "FastDownload"
 #define AppURL "https://github.com/"
 
