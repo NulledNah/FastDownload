@@ -124,12 +124,10 @@ def _record_paths():
 
 def _recorded_paths():
     """Tutti i percorsi registrati (tab, link) di tutti gli utenti."""
-    data = _load_record()
-    entries = [v for v in data.values() if isinstance(v, dict)]
-    if isinstance(data.get("tab"), str):              # vecchio formato a utente singolo
-        entries.append({"tab": data.get("tab"), "link": data.get("link")})
     out = []
-    for entry in entries:
+    for entry in _load_record().values():
+        if not isinstance(entry, dict):
+            continue
         for label in ("tab", "link"):
             if entry.get(label):
                 out.append((label, entry[label]))
@@ -236,11 +234,6 @@ def _selftest():
     with open(RECORD, "w", encoding="utf-8") as fh:
         json.dump(data, fh)
     assert len(_recorded_paths()) == 4
-
-    with open(RECORD, "w", encoding="utf-8") as fh:           # formato vecchio (migrazione)
-        json.dump({"tab": os.path.join(tmp, "old.tabconfig"),
-                   "link": os.path.join(tmp, "oldlink")}, fh)
-    assert len(_recorded_paths()) == 2
 
     f = os.path.join(tmp, "a.tabconfig")
     open(f, "w").close()
