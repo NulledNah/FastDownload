@@ -27,6 +27,11 @@ try:
 except Exception:                 # fuori da Windows: niente chiave progetto
     flproject = None
 
+try:
+    import deps
+except Exception:                 # modulo assente: niente info/aggiornamento dipendenze
+    deps = None
+
 FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
 DEFAULT_DIR = os.path.join(os.path.expanduser("~"), "Music", "FastDownload")
 # Stato UI salvato per progetto (persistente, non volatile come il localStorage del WebView).
@@ -493,6 +498,19 @@ class Api:
             except Exception:
                 name = ""
         return {"name": name, "saved": bool(name)}
+
+    def deps_info(self):
+        """Versione di yt-dlp e se è datata."""
+        if deps is None:
+            return {"version": "", "stale": False}
+        return {"version": deps.version(), "stale": deps.stale()}
+
+    def update_deps(self):
+        """Aggiorna yt-dlp (pip). Ritorna {ok, version, msg}."""
+        if deps is None:
+            return {"ok": False, "version": "", "msg": "deps module missing"}
+        ok, msg = deps.update_ytdlp()
+        return {"ok": ok, "version": deps.version(), "msg": msg}
 
     @staticmethod
     def _project_key():

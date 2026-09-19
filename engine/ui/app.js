@@ -26,6 +26,10 @@ const T = {
     src_archive: "archive.org (FLAC)",
     src_mono: "Monochrome (FLAC)",
     offline: "offline",
+    update_ytdlp: "Update yt-dlp",
+    updating_ytdlp: "Updating yt-dlp...",
+    ytdlp_ok: "yt-dlp updated: {v}",
+    ytdlp_fail: "yt-dlp update failed",
     quality: "Source: {q}",
     lossy_note: "lossy source - FLAC/WAV disabled",
     more_info: "Download for more info",
@@ -73,6 +77,10 @@ const T = {
     src_archive: "archive.org (FLAC)",
     src_mono: "Monochrome (FLAC)",
     offline: "offline",
+    update_ytdlp: "Aggiorna yt-dlp",
+    updating_ytdlp: "Aggiorno yt-dlp...",
+    ytdlp_ok: "yt-dlp aggiornato: {v}",
+    ytdlp_fail: "Aggiornamento di yt-dlp fallito",
     quality: "Sorgente: {q}",
     lossy_note: "sorgente lossy - FLAC/WAV disattivati",
     more_info: "Scarica per pi\u00f9 info",
@@ -297,6 +305,7 @@ function applyI18n(){
   renderStatus(lastState);
   if(items.length) renderList();
   renderSourceMenu();
+  if($('upd').style.display !== 'none') $('upd').textContent = t('update_ytdlp');
   updateDownloadLabel();
 }
 
@@ -347,6 +356,31 @@ async function refreshProject(){
   projKey = key;
   $('projwarn').classList.toggle('on', !info.saved);
   try{ $('folder').textContent = await api.get_folder(); }catch(e){}
+}
+
+async function refreshDeps(){
+  let d = null;
+  try{ d = await api.deps_info(); }catch(e){ return; }
+  const btn = $('upd');
+  if(!btn) return;
+  if(d && d.stale){
+    btn.style.display = '';
+    btn.textContent = t('update_ytdlp');
+    btn.title = t('update_ytdlp');
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+async function updateYtdlp(){
+  const btn = $('upd');
+  if(btn.disabled) return;
+  btn.disabled = true; btn.textContent = t('updating_ytdlp');
+  let res = null;
+  try{ res = await api.update_deps(); }catch(e){}
+  btn.disabled = false;
+  showToast(res && res.ok ? t('ytdlp_ok', {v: res.version || ''}) : t('ytdlp_fail'));
+  refreshDeps();
 }
 
 function srcLabel(s){
@@ -406,7 +440,8 @@ function saveState(beacon){
   if(beacon && navigator.sendBeacon){
     try{
       navigator.sendBeacon('/api/save_state',
-        new Blob([JSON.stringify({state: state})], {type: 'application/json'}));
+        new Blob([JSON.stringify({token: window.FD_TOKEN || '', state: state})],
+                 {type: 'application/json'}));
       return;
     }catch(e){}
   }
@@ -600,6 +635,7 @@ async function boot(){
   $('lang').onclick = ()=> applyLang(lang === 'en' ? 'it' : 'en');
   $('theme').onclick = ()=> applyTheme(
     document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  $('upd').onclick = updateYtdlp;
   $('searchBtn').onclick = doSearch;
   $('srcbtn').onclick = (e)=>{
     e.stopPropagation();
@@ -653,6 +689,7 @@ async function boot(){
   setInterval(refreshSources, 60000);
   refreshProject();
   setInterval(refreshProject, 4000);
+  refreshDeps();
   setInterval(poll, 120);
 }
 

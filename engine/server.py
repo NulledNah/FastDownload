@@ -9,11 +9,14 @@ L'output di default è <cartella progetto FL>/FastDownload.
 import json
 import os
 import sys
+import secrets
+import threading
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import api
 import browser_tab
+import deps
 import flproject
 import plugin_icon
 import main as app
@@ -24,8 +27,11 @@ STORE = os.path.join(os.environ.get("LOCALAPPDATA") or os.path.expanduser("~"),
 
 SHIM = """<script>
 (function(){
+  const T = "__TOKEN__";
+  window.FD_TOKEN = T;
   const R = (path, body) => fetch(path, {method:'POST',
-    headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{})}).then(r=>r.json());
+    headers:{'Content-Type':'application/json','X-FD-Token':T},
+    body: JSON.stringify(body||{})}).then(r=>r.json());
   window.pywebview = { api: {
     get_folder: ()=> fetch('/api/folder').then(r=>r.json()).then(d=>d.folder),
     search: (q, sources) => R('/api/search', {q, sources}),
@@ -40,6 +46,8 @@ SHIM = """<script>
     project_info: ()=> R('/api/project_info'),
     save_state: state => R('/api/save_state', {state}),
     load_state: ()=> R('/api/load_state'),
+    deps_info: ()=> R('/api/deps_info'),
+    update_deps: ()=> R('/api/update_deps'),
     pick_folder: ()=> R('/api/pick_folder').then(d=>d.folder),
     open_folder: ()=> R('/api/open_folder'),
     open_external: url => R('/api/open_external', {url})
@@ -53,6 +61,7 @@ class Bridge:
     def __init__(self):
         self.api = api.Api()
         self.overrides = self._load()
+        self.token = secrets.token_urlsafe(18)   # guardia CSRF per le POST
 
     def _load(self):
         try:
@@ -88,7 +97,8 @@ class Bridge:
 
     def page(self):
         html = app.build_html()
-        return html.replace("</body>", SHIM + "</body>").encode("utf-8")
+        shim = SHIM.replace("__TOKEN__", self.token)
+        return html.replace("</body>", shim + "</body>").encode("utf-8")
 
 
 def make_handler(bridge):
@@ -121,6 +131,11 @@ def make_handler(bridge):
                 data = json.loads(self.rfile.read(n) or b"{}")
             except ValueError:
                 data = {}
+            token = self.headers.get("X-FD-Token") or (data.get("token")
+                                                       if isinstance(data, dict) else None)
+            if token != bridge.token:              # guardia CSRF: senza token, rifiuta
+                self._send(403, b"forbidden", "text/plain")
+                return
             a = bridge.api
             route = self.path
             if route == "/api/search":
@@ -152,6 +167,10 @@ def make_handler(bridge):
                 self._json(a.save_state(data.get("state") or {}))
             elif route == "/api/load_state":
                 self._json(a.load_state())
+            elif route == "/api/deps_info":
+                self._json(a.deps_info())
+            elif route == "/api/update_deps":
+                self._json(a.update_deps())
             elif route == "/api/pick_folder":
                 folder = pick_folder(bridge.folder())
                 if folder:
@@ -241,6 +260,7 @@ def serve(port):
     srv.daemon_threads = True
     browser_tab.install()          # tab del browser (ha effetto a FL chiuso)
     plugin_icon.ensure()           # icona del plugin accanto a FastDownload.fst
+    threading.Thread(target=deps.auto_update, daemon=True).start()  # yt-dlp se datato
     print(f"FastDownload server: http://127.0.0.1:{port}/", flush=True)
     print(f"project folder: {flproject.project_dir() or '(not detected)'}", flush=True)
     print(f"output: {bridge.folder()}", flush=True)

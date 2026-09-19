@@ -43,6 +43,7 @@ Source: "..\engine\audio_meta.py";    DestDir: "{app}"; Flags: ignoreversion
 Source: "..\engine\browser_tab.py";   DestDir: "{app}"; Flags: ignoreversion
 Source: "..\engine\monochrome.py";    DestDir: "{app}"; Flags: ignoreversion
 Source: "..\engine\plugin_icon.py";   DestDir: "{app}"; Flags: ignoreversion
+Source: "..\engine\deps.py";          DestDir: "{app}"; Flags: ignoreversion
 Source: "..\engine\assets\plugin-icon.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "..\engine\requirements.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; la UI non usa ui\assets (logo/sorgenti): esclusi dal pacchetto
