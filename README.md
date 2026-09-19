@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="engine/assets/plugin-icon.png" alt="FastDownload" width="128">
+</p>
+
 # FastDownload
 
 **Search, preview and download audio in MP3, FLAC or WAV — right inside FL Studio.**
