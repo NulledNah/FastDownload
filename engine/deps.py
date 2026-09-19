@@ -1,16 +1,26 @@
 """Aggiornamento delle dipendenze Python.
 
-`yt-dlp` invecchia in fretta (YouTube cambia spesso): qui capiamo se è datato e
-lo aggiorniamo con pip.
+`yt-dlp` invecchia in fretta (YouTube cambia spesso): qui capiamo se è ora di
+riverificarlo e lo aggiorniamo con pip.
+
+Lo stato non si basa sull'età della versione installata (che può restare la più
+recente disponibile per settimane) ma sull'**ultima verifica riuscita**: se
+`pip -U` va a buon fine consideriamo yt-dlp aggiornato per `CHECK_DAYS` giorni.
 """
 
-import datetime
+import json
+import os
 import subprocess
 import sys
+import time
+
+STAMP = os.path.join(os.environ.get("LOCALAPPDATA") or os.path.expanduser("~"),
+                     "FastDownload", "ytdlp.json")
+CHECK_DAYS = 7
 
 
 def version():
-    """Versione di yt-dlp (es. '2025.09.15') o ''."""
+    """Versione di yt-dlp (es. '2026.08.19') o ''."""
     try:
         from yt_dlp.version import __version__
         return __version__
@@ -18,18 +28,29 @@ def version():
         return ""
 
 
-def _date():
-    parts = (version().split(".") + ["0", "0"])[:3]
+def _last_check():
     try:
-        return datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
-    except ValueError:
+        with open(STAMP, encoding="utf-8") as fh:
+            return float(json.load(fh).get("checked", 0)) or None
+    except Exception:
         return None
 
 
-def stale(max_age_days=14):
-    """True se yt-dlp ha più di `max_age_days` giorni (o versione illeggibile)."""
-    d = _date()
-    return True if d is None else (datetime.date.today() - d).days > max_age_days
+def _mark_checked():
+    try:
+        os.makedirs(os.path.dirname(STAMP), exist_ok=True)
+        with open(STAMP, "w", encoding="utf-8") as fh:
+            json.dump({"checked": time.time(), "version": version()}, fh)
+    except OSError:
+        pass
+
+
+def stale(check_days=CHECK_DAYS):
+    """True se yt-dlp non è mai stato verificato o è passato troppo tempo."""
+    if not version():
+        return True
+    last = _last_check()
+    return last is None or (time.time() - last) > check_days * 86400
 
 
 def _pip(extra):
@@ -49,19 +70,29 @@ def update_ytdlp():
     ok, msg = _pip([])
     if not ok and any(w in msg.lower() for w in ("permission", "denied", "access is")):
         ok, msg = _pip(["--user"])          # ambiente non scrivibile: installa per l'utente
+    if ok:
+        _mark_checked()                     # verifica riuscita: niente prompt per CHECK_DAYS
     return ok, msg
 
 
-def auto_update(max_age_days=14):
-    """Aggiorna in background se datato (best effort). Ritorna (ok, msg) o (None,'fresh')."""
-    if not stale(max_age_days):
+def auto_update(check_days=CHECK_DAYS):
+    """Aggiorna se non verificato di recente. Ritorna (ok, msg) o (None,'fresh')."""
+    if not stale(check_days):
         return None, "fresh"
     return update_ytdlp()
 
 
 def _selftest():
+    import tempfile
+    global STAMP
     assert isinstance(version(), str)
-    assert isinstance(stale(), bool)
+    STAMP = os.path.join(tempfile.mkdtemp(prefix="fd_deps_"), "ytdlp.json")
+    assert _last_check() is None
+    if version():
+        assert stale() is True              # mai verificato
+        _mark_checked()
+        assert _last_check() is not None
+        assert stale() is False             # appena verificato: non datato
     print("deps selftest ok")
 
 
