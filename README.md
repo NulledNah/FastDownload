@@ -116,14 +116,6 @@ Install the plugin system-wide with `FastDownload.bat` → *5* (admin).
 To build the installer you need [Inno Setup](https://jrsoftware.org/isdl.php):
 `FastDownload.bat` → *7*.
 
-## Troubleshooting
-
-- **Black windows when adding the plugin**: fixed in 1.0.0 (shell commands run without a console).
-- **Wrong download folder in FL**: the folder follows the saved project; **save the project** to make the plugin point to its folder (a warning is shown otherwise).
-- **"Python not found"**: install Python 3.10+ with *Add python.exe to PATH*, or start the server manually (`FastDownload.bat` → *2*) and reopen the plugin.
-- **Monochrome shows "offline"**: the public instances are temporarily unreachable/blocked; it re-checks periodically.
-- **Port 8731 busy**: close other FastDownload servers.
-
 ## Credits
 
 - [JUCE](https://juce.com/) — plugin framework.
